@@ -30,8 +30,8 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
     driver.get(url)
     jobs = []
     #print(url)
-
-    while len(jobs) < num_jobs:  #If true, should be still looking for new jobs.
+    N = -1
+    while len(jobs) < num_jobs and N < 2*num_jobs:  #If true, should be still looking for new jobs.
 
         #Let the page load. Change this number based on your internet speed.
         #Or, wait until the webpage is loaded, instead of hardcoding it.
@@ -61,7 +61,6 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
         
         #Going through each job in this page
         job_buttons = driver.find_elements("class name", "react-job-listing")  #jl for Job Listing. These are the buttons we're going to click.
-        N = -1
         for job_button in job_buttons:  
 
             print("Progress: {}".format("" + str(len(jobs)) + "/" + str(num_jobs)))
@@ -72,9 +71,10 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
             time.sleep(2)
             N += 1
             try:
-                all_text = driver.find_element("xpath", './/div[@class="css-xuk5ye e1tk4kwz5"]').text
-                rating = driver.find_element("xpath", './/span[@class="css-1m5m32b e1tk4kwz4"]').text
-                company_name = all_text.replace(rating, '')
+                company_name = driver.find_element("xpath", './/div[@class="css-xuk5ye e1tk4kwz5"]').text
+                #all_text = driver.find_element("xpath", './/div[@class="css-xuk5ye e1tk4kwz5"]').text
+                #rating = driver.find_element("xpath", './/span[@class="css-1m5m32b e1tk4kwz4"]').text
+                #company_name = all_text.replace(rating, '')
 
                 location = driver.find_element("xpath", './/div[@class="css-56kyx5 e1tk4kwz1"]').text
                 job_title = driver.find_element("xpath", './/div[contains(@class, "css-1j389vi e1tk4kwz2")]').text
@@ -120,7 +120,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
                     info_name = company_info.find_element("xpath", './/span[@class="css-1pldt9b e1pvx6aw1"]').text
                     info_content = company_info.find_element("xpath", './/span[@class="css-1ff36h2 e1pvx6aw0"]').text
                     info_names[info_name] = info_content
-                except NoSuchElementException:
+                except:
                     pass
                        
             size = info_names['Size']
@@ -130,7 +130,6 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
             sector = info_names['Sector']
             revenue = info_names['Revenue']
 
-                
             if verbose:
                 #print("Headquarters: {}".format(headquarters))
                 print("Size: {}".format(size))
