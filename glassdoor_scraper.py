@@ -2,7 +2,8 @@
 """
 Created on Thu Aug 18 17:58:58 2022
 
-@author: gwena
+@author: Kenarapfaik
+url: https://mersakarya.medium.com/selenium-tutorial-scraping-glassdoor-com-in-10-minutes-3d0915c6d905
 """
 
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
@@ -39,7 +40,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
         #Accepte les cookies 
         try:
             driver.find_element("id", "onetrust-accept-btn-handler").click()
-        except ElementClickInterceptedException:
+        except:
             pass
         
         time.sleep(5)
@@ -78,9 +79,9 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
                 location = driver.find_element("xpath", './/div[@class="css-56kyx5 e1tk4kwz1"]').text
                 job_title = driver.find_element("xpath", './/div[contains(@class, "css-1j389vi e1tk4kwz2")]').text
                 job_description = driver.find_element("xpath", './/div[@class="jobDescriptionContent desc"]').text
-                print(f'SUCCED {N}')
+                print(f'   SUCCED {N}')
             except:
-                print(f'FAILED {N}')
+                print(f'   FAILED {N}')
                 continue
 
             try:
@@ -114,7 +115,6 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
                           'Industry': -1,
                           'Sector': -1,
                           'Revenue': -1}
-            print(len(company_infos))
             for company_info in company_infos:
                 try:
                     info_name = company_info.find_element("xpath", './/span[@class="css-1pldt9b e1pvx6aw1"]').text
@@ -159,9 +159,10 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
             })
             #add job to jobs
 
-        #Clicking on the "next page" button
+        #Clicking on the "next page" button      
         try:
-            driver.find_element("xpath", './/li[@class="next"]//a').click()
+            driver.find_element("css selector", '[alt="next-icon"]').click()
+            print('------NEXT PAGE------')
         except NoSuchElementException:
             print("Scraping terminated before reaching target number of jobs. Needed {}, got {}.".format(num_jobs, len(jobs)))
             break
