@@ -2,7 +2,7 @@
 """
 Created on Thu Aug 18 17:58:58 2022
 
-@author: gwena!Test
+@author: gwena
 """
 
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
@@ -24,10 +24,11 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
     driver = webdriver.Chrome(executable_path=path, options=options)
     driver.set_window_size(1120, 1000)
 
-    url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword="' + keyword + '"&locT=C&locId=1147401&locKeyword=San%20Francisco,%20CA&jobType=all&fromAge=-1&minSalary=0&includeNoSalaryJobs=true&radius=100&cityId=-1&minRating=0.0&industryId=-1&sgocId=-1&seniorityType=all&companyId=-1&employerSizes=0&applicationType=0&remoteWorkType=0'
+    url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword="' + keyword + '"&clickSource=searchBox'
+    #url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword="' + keyword + '"&locT=C&locId=1147401&locKeyword=San%20Francisco,%20CA&jobType=all&fromAge=-1&minSalary=0&includeNoSalaryJobs=true&radius=100&cityId=-1&minRating=0.0&industryId=-1&sgocId=-1&seniorityType=all&companyId=-1&employerSizes=0&applicationType=0&remoteWorkType=0'
     driver.get(url)
     jobs = []
-    print(url)
+    #print(url)
 
     while len(jobs) < num_jobs:  #If true, should be still looking for new jobs.
 
@@ -35,36 +36,31 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
         #Or, wait until the webpage is loaded, instead of hardcoding it.
         time.sleep(slp_time)
 
-        #Test for the "Sign Up" prompt and get rid of it.
-        
+        #Accepte les cookies 
         try:
             driver.find_element("id", "onetrust-accept-btn-handler").click()
-            print('1- x out worked')
         except ElementClickInterceptedException:
-            print('1- x out failed')
             pass
         
         time.sleep(5)
         
+        #Test for the "Sign Up" prompt and get rid of it.
         try:
             driver.find_element("class name", "react-job-listing").click()
-            print('2- x out worked')
         except ElementClickInterceptedException:
-            print('2- x out failed')
             pass
 
         time.sleep(5)
 
         try:
             driver.find_element("css selector", '[alt="Close"]').click()  #clicking to the X.
-            print('3- x out worked')
         except NoSuchElementException:
-            print('3- x out failed')
             pass
 
         
         #Going through each job in this page
         job_buttons = driver.find_elements("class name", "react-job-listing")  #jl for Job Listing. These are the buttons we're going to click.
+        N = -1
         for job_button in job_buttons:  
 
             print("Progress: {}".format("" + str(len(jobs)) + "/" + str(num_jobs)))
@@ -72,33 +68,29 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
                 break
             
             job_button.click()  #You might 
-            time.sleep(1)
-            collected_successfully = False
-            
-            while not collected_successfully:
-                try:
-                    company_name = driver.find_element("xpath", './/div[@class="css-xuk5ye e1tk4kwz5"]').text
-                    location = driver.find_element("xpath", './/div[@class="css-56kyx5 e1tk4kwz1"]').text
-                    job_title = driver.find_element("xpath", './/div[contains(@class, "css-1j389vi e1tk4kwz2")]').text
-                    job_description = driver.find_element("xpath", './/div[@class="jobDescriptionContent desc"]').text
-                    collected_successfully = True
-                    print('4- x out worked')
-                except:
-                    print('4- x out failed')
-                    time.sleep(5)
+            time.sleep(2)
+            N += 1
+            try:
+                all_text = driver.find_element("xpath", './/div[@class="css-xuk5ye e1tk4kwz5"]').text
+                rating = driver.find_element("xpath", './/span[@class="css-1m5m32b e1tk4kwz4"]').text
+                company_name = all_text.replace(rating, '')
+
+                location = driver.find_element("xpath", './/div[@class="css-56kyx5 e1tk4kwz1"]').text
+                job_title = driver.find_element("xpath", './/div[contains(@class, "css-1j389vi e1tk4kwz2")]').text
+                job_description = driver.find_element("xpath", './/div[@class="jobDescriptionContent desc"]').text
+                print(f'SUCCED {N}')
+            except:
+                print(f'FAILED {N}')
+                continue
 
             try:
                 salary_estimate = driver.find_element("xpath", './/span[@class="css-1hbqxax e1wijj240"]').text
-                print('5- x out worked')
             except NoSuchElementException:
-                print('5- x out failed')
                 salary_estimate = -1 #You need to set a "not found value. It's important."
                 
             try:
                 rating = driver.find_element("xpath", './/span[@class="css-1m5m32b e1tk4kwz4"]').text
-                print('6- x out worked')
             except NoSuchElementException:
-                print('6- x out failed')
                 rating = -1 #You need to set a "not found value. It's important."
 
             #Printing for debugging
@@ -113,73 +105,41 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
             #Going to the Company tab...
             #clicking on this:
             #<div class="tab" data-tab-type="overview"><span>Company</span></div>
-            try:
-                driver.find_element("xpath", './/div[@class="tab" and @data-tab-type="overview"]').click()
-
+            
+            
+            company_infos = driver.find_elements("xpath", './/div[@class="d-flex justify-content-start css-daag8o e1pvx6aw2"]')
+            info_names = {'Size': -1,
+                          'Founded': -1,
+                          'Type': -1,
+                          'Industry': -1,
+                          'Sector': -1,
+                          'Revenue': -1}
+            print(len(company_infos))
+            for company_info in company_infos:
                 try:
-                    #<div class="infoEntity">
-                    #    <label>Headquarters</label>
-                    #    <span class="value">San Francisco, CA</span>
-                    #</div>
-                    headquarters = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Headquarters"]//following-sibling::*').text
+                    info_name = company_info.find_element("xpath", './/span[@class="css-1pldt9b e1pvx6aw1"]').text
+                    info_content = company_info.find_element("xpath", './/span[@class="css-1ff36h2 e1pvx6aw0"]').text
+                    info_names[info_name] = info_content
                 except NoSuchElementException:
-                    headquarters = -1
-
-                try:
-                    size = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Size"]//following-sibling::*').text
-                except NoSuchElementException:
-                    size = -1
-
-                try:
-                    founded = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Founded"]//following-sibling::*').text
-                except NoSuchElementException:
-                    founded = -1
-
-                try:
-                    type_of_ownership = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Type"]//following-sibling::*').text
-                except NoSuchElementException:
-                    type_of_ownership = -1
-
-                try:
-                    industry = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Industry"]//following-sibling::*').text
-                except NoSuchElementException:
-                    industry = -1
-
-                try:
-                    sector = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Sector"]//following-sibling::*').text
-                except NoSuchElementException:
-                    sector = -1
-
-                try:
-                    revenue = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Revenue"]//following-sibling::*').text
-                except NoSuchElementException:
-                    revenue = -1
-
-                try:
-                    competitors = driver.find_element("xpath", './/div[@class="infoEntity"]//label[text()="Competitors"]//following-sibling::*').text
-                except NoSuchElementException:
-                    competitors = -1
-
-            except NoSuchElementException:  #Rarely, some job postings do not have the "Company" tab.
-                headquarters = -1
-                size = -1
-                founded = -1
-                type_of_ownership = -1
-                industry = -1
-                sector = -1
-                revenue = -1
-                competitors = -1
+                    pass
+                       
+            size = info_names['Size']
+            founded = info_names['Founded']
+            type_of_ownership = info_names['Type']
+            industry = info_names['Industry']
+            sector = info_names['Sector']
+            revenue = info_names['Revenue']
 
                 
             if verbose:
-                print("Headquarters: {}".format(headquarters))
+                #print("Headquarters: {}".format(headquarters))
                 print("Size: {}".format(size))
                 print("Founded: {}".format(founded))
                 print("Type of Ownership: {}".format(type_of_ownership))
                 print("Industry: {}".format(industry))
                 print("Sector: {}".format(sector))
                 print("Revenue: {}".format(revenue))
-                print("Competitors: {}".format(competitors))
+                #print("Competitors: {}".format(competitors))
                 print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
             jobs.append({"Job Title" : job_title,
@@ -188,14 +148,15 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
             "Rating" : rating,
             "Company Name" : company_name,
             "Location" : location,
-            "Headquarters" : headquarters,
+            #"Headquarters" : headquarters,
             "Size" : size,
             "Founded" : founded,
             "Type of ownership" : type_of_ownership,
             "Industry" : industry,
             "Sector" : sector,
             "Revenue" : revenue,
-            "Competitors" : competitors})
+            #"Competitors" : competitors
+            })
             #add job to jobs
 
         #Clicking on the "next page" button
