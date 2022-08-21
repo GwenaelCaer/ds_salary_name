@@ -31,7 +31,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
     jobs = []
     #print(url)
     N = -1
-    while len(jobs) < num_jobs and N < 2*num_jobs:  #If true, should be still looking for new jobs.
+    while len(jobs) < num_jobs and N < 1.1*num_jobs:  #If true, should be still looking for new jobs.
 
         #Let the page load. Change this number based on your internet speed.
         #Or, wait until the webpage is loaded, instead of hardcoding it.
@@ -48,14 +48,14 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
         #Test for the "Sign Up" prompt and get rid of it.
         try:
             driver.find_element("class name", "react-job-listing").click()
-        except ElementClickInterceptedException:
+        except: # ElementClickInterceptedException:
             pass
 
         time.sleep(5)
 
         try:
             driver.find_element("css selector", '[alt="Close"]').click()  #clicking to the X.
-        except NoSuchElementException:
+        except: # NoSuchElementException:
             pass
 
         
@@ -86,12 +86,12 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
 
             try:
                 salary_estimate = driver.find_element("xpath", './/span[@class="css-1hbqxax e1wijj240"]').text
-            except NoSuchElementException:
+            except: #NoSuchElementException:
                 salary_estimate = -1 #You need to set a "not found value. It's important."
                 
             try:
                 rating = driver.find_element("xpath", './/span[@class="css-1m5m32b e1tk4kwz4"]').text
-            except NoSuchElementException:
+            except: #NoSuchElementException:
                 rating = -1 #You need to set a "not found value. It's important."
 
             #Printing for debugging
@@ -162,7 +162,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
         try:
             driver.find_element("css selector", '[alt="next-icon"]').click()
             print('------NEXT PAGE------')
-        except NoSuchElementException:
+        except: #NoSuchElementException:
             print("Scraping terminated before reaching target number of jobs. Needed {}, got {}.".format(num_jobs, len(jobs)))
             break
 
